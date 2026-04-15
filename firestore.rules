@@ -1,0 +1,97 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: {uid}
+    // Fields:
+    //   - uid: string (required)
+    //   - displayName: string (optional)
+    //   - email: string (required)
+    //   - photoURL: string (optional)
+    //   - lastActive: timestamp (required)
+    //
+    // Collection: progress
+    // Document ID: {uid}_{day}
+    // Fields:
+    //   - uid: string (required)
+    //   - day: number (required)
+    //   - otCompleted: bool (required)
+    //   - ntCompleted: bool (required)
+    //   - updatedAt: timestamp (required)
+    //
+    // Collection: favorites
+    // Document ID: {uid}_{date}
+    // Fields:
+    //   - uid: string (required)
+    //   - date: string (required, YYYY-MM-DD)
+    //   - reference: string (required)
+    //   - text: string (required)
+    //   - createdAt: timestamp (required)
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isValidUser(data) {
+      return data.uid == request.auth.uid &&
+             data.email is string &&
+             data.lastActive is timestamp;
+    }
+    
+    function isValidProgress(data) {
+      return data.uid == request.auth.uid &&
+             data.day is number &&
+             data.otCompleted is bool &&
+             data.ntCompleted is bool &&
+             data.updatedAt is timestamp;
+    }
+    
+    function isValidFavorite(data) {
+      return data.uid == request.auth.uid &&
+             data.date is string &&
+             data.reference is string &&
+             data.reference.size() < 100 &&
+             data.text is string &&
+             data.text.size() < 1000 &&
+             data.createdAt is timestamp;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{uid} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(uid) && isValidUser(request.resource.data);
+    }
+    
+    match /progress/{progressId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && 
+                    request.resource.data.uid == request.auth.uid && 
+                    isValidProgress(request.resource.data);
+    }
+    
+    match /favorites/{favoriteId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && 
+                    request.resource.data.uid == request.auth.uid && 
+                    isValidFavorite(request.resource.data);
+    }
+  }
+}

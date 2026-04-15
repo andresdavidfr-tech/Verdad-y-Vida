@@ -1,0 +1,57 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Private user profile data",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "displayName": { "type": "string" },
+        "email": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "lastActive": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email"]
+    },
+    "ReadingProgress": {
+      "title": "Reading Progress",
+      "description": "Daily reading completion status",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "day": { "type": "integer" },
+        "otCompleted": { "type": "boolean" },
+        "ntCompleted": { "type": "boolean" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "day"]
+    },
+    "FavoriteVerse": {
+      "title": "Favorite Verse",
+      "description": "User's favorite verse for a specific day",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "date": { "type": "string" },
+        "reference": { "type": "string" },
+        "text": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "date", "reference", "text"]
+    }
+  },
+  "firestore": {
+    "/users/{uid}": {
+      "schema": "UserProfile",
+      "description": "User profile documents"
+    },
+    "/progress/{progressId}": {
+      "schema": "ReadingProgress",
+      "description": "User reading progress records"
+    },
+    "/favorites/{favoriteId}": {
+      "schema": "FavoriteVerse",
+      "description": "User favorite verses"
+    }
+  }
+}
